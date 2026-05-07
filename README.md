@@ -127,6 +127,31 @@ exa aillm status    # show record counts vs. reference counts
 
 ---
 
+## Roadmap
+
+### Applications (known_ai_apps.json)
+Weekly scraper against Futurepedia and Product Hunt AI category — diffs
+new app names against the known list and opens a PR for review. Highest
+priority: new AI tools launch daily and this list drifts fastest.
+
+### Proxy & Web Categories (known_proxy_categories.json)
+Quarterly monitor against Zscaler and Palo Alto URL filtering release
+notes for new AI/LLM category additions. Low frequency — proxy vendors
+update AI categories a few times per year.
+
+### DLP Rulesets (known_dlp_alert_patterns.json)
+Manual quarterly review against Microsoft Purview, Symantec DLP, and
+Forcepoint release notes for new AI-specific policy templates. Changes
+infrequently enough that automation adds little value here.
+
+### All workflows follow the same pattern
+Scraper runs on a schedule → diffs against known list → opens a PR with
+additions tagged by source → human reviews and merges →
+sync-to-exa-tools.yml propagates the update to the bundled fallback in
+exa-tools automatically.
+
+---
+
 ## License
 
 Reference data compiled from public sources. CC0 1.0 — no rights reserved.
