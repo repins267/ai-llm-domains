@@ -1,0 +1,73 @@
+name: Sync bundled data to exa-tools
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'data/known_ai_domains.json'
+      - 'data/known_ai_apps.json'
+      - 'data/known_proxy_categories.json'
+      - 'data/known_dlp_alert_patterns.json'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout ai-llm-domains
+        uses: actions/checkout@v4.2.2
+        with:
+          path: ai-llm-domains
+
+      - name: Checkout exa-tools
+        uses: actions/checkout@v4.2.2
+        with:
+          repository: repins267/exa-tools
+          token: ${{ secrets.ETOOLS_PAT }}
+          path: exa-tools
+
+      - name: Copy updated JSON files
+        run: |
+          cp ai-llm-domains/data/known_ai_domains.json \
+             exa-tools/exa/aillm/data/known_ai_domains.json
+          cp ai-llm-domains/data/known_ai_apps.json \
+             exa-tools/exa/aillm/data/known_ai_apps.json
+          cp ai-llm-domains/data/known_proxy_categories.json \
+             exa-tools/exa/aillm/data/known_proxy_categories.json
+          cp ai-llm-domains/data/known_dlp_alert_patterns.json \
+             exa-tools/exa/aillm/data/known_dlp_alert_patterns.json
+
+      - name: Open PR on exa-tools
+        env:
+          GH_TOKEN: ${{ secrets.ETOOLS_PAT }}
+        run: |
+          cd exa-tools
+
+          DATE=$(date -u +%Y-%m-%d)
+          BRANCH="auto/sync-aillm-data-${DATE}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "${BRANCH}"
+          git add exa/aillm/data/
+          git diff --cached --quiet && echo "No changes to sync." && exit 0
+          git commit -m "chore: sync bundled AI/LLM data from ai-llm-domains (${DATE})"
+          git push origin "${BRANCH}"
+
+          cat > /tmp/pr_body.md << PREOF
+          ## Bundled AI/LLM data sync
+
+          Auto-synced from repins267/ai-llm-domains on ${DATE}.
+
+          Updates the fallback snapshot in exa/aillm/data/ to match
+          the latest reference data. Machines that have run exa update
+          already use the external repo directly — this keeps the
+          cold-start fallback current for new installs.
+          PREOF
+
+          gh pr create \
+            --title "chore: sync bundled AI/LLM data from ai-llm-domains (${DATE})" \
+            --body-file /tmp/pr_body.md \
+            --head "${BRANCH}" \
+            --base "main" \
+            --repo repins267/exa-tools
