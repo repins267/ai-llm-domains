@@ -1,0 +1,80 @@
+name: CT Log Scanner
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'   # Every Monday at 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  ct-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install httpx
+
+      - name: Scan CT logs
+        id: scan
+        run: |
+          set +e
+          python scripts/scan_ct_logs.py
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+
+      - name: No new domains
+        if: steps.scan.outputs.exit_code == '0'
+        run: echo "No new domains found — nothing to do."
+
+      - name: Merge, commit, and open PR
+        if: steps.scan.outputs.exit_code == '1'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          MERGE_OUTPUT=$(python scripts/merge_discoveries.py)
+          echo "$MERGE_OUTPUT"
+
+          DATE=$(date -u +%Y-%m-%d)
+          BRANCH="auto/ct-scan-${DATE}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "${BRANCH}"
+          git add data/known_ai_domains.json
+          git commit -m "auto: add CT-discovered domains (${DATE})"
+          git push origin "${BRANCH}"
+
+          # Create the label if it doesn't already exist
+          gh label create "auto-discovered" \
+            --color "0075ca" \
+            --description "Auto-discovered by CT log scanner" || true
+
+          gh pr create \
+            --title "Auto: CT-discovered AI domains (${DATE})" \
+            --body "## CT Log Scan Results
+
+${MERGE_OUTPUT}
+
+New subdomains were discovered via Certificate Transparency logs for known
+AI/LLM provider base domains (certificates issued in the last 7 days).
+
+**Review before merging:**
+- Verify the domains are genuinely AI/LLM related
+- Adjust the \`risk\` field if needed (default: \`medium\`)
+- Remove any false positives (CDN edges, internal endpoints, etc.)" \
+            --label "auto-discovered" \
+            --head "${BRANCH}" \
+            --base "main"
