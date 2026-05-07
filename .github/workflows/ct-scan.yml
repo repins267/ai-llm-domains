@@ -62,19 +62,24 @@ jobs:
             --color "0075ca" \
             --description "Auto-discovered by CT log scanner" || true
 
+          # Write PR body to a temp file to avoid YAML/shell quoting issues
+          cat > /tmp/pr_body.md << EOF
+          ## CT Log Scan Results
+
+          ${MERGE_OUTPUT}
+
+          New subdomains were discovered via Certificate Transparency logs for known
+          AI/LLM provider base domains (certificates issued in the last 7 days).
+
+          **Review before merging:**
+          - Verify the domains are genuinely AI/LLM related
+          - Adjust the \`risk\` field if needed (default: \`medium\`)
+          - Remove any false positives (CDN edges, internal endpoints, etc.)
+          EOF
+
           gh pr create \
             --title "Auto: CT-discovered AI domains (${DATE})" \
-            --body "## CT Log Scan Results
-
-${MERGE_OUTPUT}
-
-New subdomains were discovered via Certificate Transparency logs for known
-AI/LLM provider base domains (certificates issued in the last 7 days).
-
-**Review before merging:**
-- Verify the domains are genuinely AI/LLM related
-- Adjust the \`risk\` field if needed (default: \`medium\`)
-- Remove any false positives (CDN edges, internal endpoints, etc.)" \
+            --body-file /tmp/pr_body.md \
             --label "auto-discovered" \
             --head "${BRANCH}" \
             --base "main"
