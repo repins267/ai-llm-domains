@@ -54,7 +54,7 @@ Risk is editorially curated — there is no automated scoring. Every domain is a
 | **Autonomous execution** | Tool controls a terminal, browser, or IDE on the user's behalf — blast radius of a misconfiguration or supply chain compromise is significantly higher than a chat interface | OpenHands (all-hands.dev), AutoGPT, Open Interpreter, OpenClaw |
 | **No enterprise controls** | Consumer-only product with no SSO, audit logging, DLP integration, or data processing agreement | Character.AI, CivitAI, tensor.art, seaart.ai |
 | **Unofficial / unverified** | Third-party UI wrapping another provider's model with no clear data-handling policy | stablediffusionweb.com |
-| **Malicious / impersonation** | Confirmed bad actor or unauthorized fork impersonating a legitimate project | zeroclaw.org, zeroclaw.net |
+| **Unauthorized fork / impersonation** | Fork impersonating a legitimate project — included for detection, not excluded | zeroclaw.org, zeroclaw.net (impersonating zeroclawlabs.ai) |
 | **Uncertain operational status** | Deprecated or abandoned service with no clear data-deletion guarantees | banana.dev |
 
 A domain only needs to meet **one** rationale to be rated High. Medium is the default for any established Western provider with a public ToS and enterprise offering. Low is reserved for cloud-native or enterprise-managed infrastructure where the customer controls data residency (e.g. Azure OpenAI, AWS Bedrock, Adobe Firefly).
