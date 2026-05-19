@@ -36,12 +36,48 @@ and Exabeam New-Scale context tables.
 ```
 
 **Risk levels:**
+
 | Level | Meaning |
 |---|---|
 | `low` | Informational / observability only |
 | `medium` | Default — monitor and alert on anomalous volume |
-| `high` | Sensitive data transfer risk; consider blocking for regulated users |
-| `critical` | Known policy violation or data exfiltration vector |
+| `high` | Sensitive data transfer risk; consider blocking or alerting for regulated users |
+| `critical` | Known policy violation or active data exfiltration vector |
+
+**How risk is assigned**
+
+Risk is editorially curated — there is no automated scoring. Every domain is assigned a level based on one or more of the following rationales:
+
+| Rationale | Criteria | Examples |
+|---|---|---|
+| **Data jurisdiction** | Provider based in a country with mandatory state data-access laws (e.g. China's PIPL/DSL) | DeepSeek, Qwen (Alibaba), Doubao (ByteDance), Kimi (Moonshot), ChatGLM (Zhipu), ERNIE (Baidu), Kling AI (Kuaishou) |
+| **Autonomous execution** | Tool controls a terminal, browser, or IDE on the user's behalf — blast radius of a misconfiguration or supply chain compromise is significantly higher than a chat interface | OpenHands (all-hands.dev), AutoGPT, Open Interpreter, OpenClaw |
+| **No enterprise controls** | Consumer-only product with no SSO, audit logging, DLP integration, or data processing agreement | Character.AI, CivitAI, tensor.art, seaart.ai |
+| **Unofficial / unverified** | Third-party UI wrapping another provider's model with no clear data-handling policy | stablediffusionweb.com |
+| **Malicious / impersonation** | Confirmed bad actor or unauthorized fork impersonating a legitimate project | zeroclaw.org, zeroclaw.net |
+| **Uncertain operational status** | Deprecated or abandoned service with no clear data-deletion guarantees | banana.dev |
+
+A domain only needs to meet **one** rationale to be rated High. Medium is the default for any established Western provider with a public ToS and enterprise offering. Low is reserved for cloud-native or enterprise-managed infrastructure where the customer controls data residency (e.g. Azure OpenAI, AWS Bedrock, Adobe Firefly).
+
+---
+
+## Domain Categories
+
+| Category | Domains | High | Medium | Low | Notes |
+|---|---|---|---|---|---|
+| **Generative AI** | 33 | 12 | 21 | 0 | China-based providers rated High (data jurisdiction) |
+| **AI Platform/API** | 75 | 3 | 52 | 20 | Cloud-native/enterprise infra rated Low; third-party APIs rated Medium; DeepSeek and banana.dev rated High |
+| **Code Assistant** | 30 | 0 | 6 | 24 | IDE plugins rated Low (code stays local); cloud IDEs rated Medium |
+| **Shadow AI** | 21 | 11 | 10 | 0 | Autonomous execution (terminal/browser/IDE control) drives all High ratings |
+| **Image Generation** | 19 | 4 | 14 | 1 | No enterprise controls, unmoderated content, or unofficial UIs rated High; Adobe Firefly rated Low |
+| **AI Search** | 11 | 0 | 9 | 2 | Academic read-only tools (Semantic Scholar) rated Low |
+| **AI Productivity** | 11 | 0 | 11 | 0 | All established providers with ToS |
+| **Video AI** | 13 | 1 | 12 | 0 | Kling AI (Kuaishou) rated High; all others Medium |
+| **Voice/Audio AI** | 10 | 0 | 10 | 0 | All established providers with ToS |
+
+**Shadow AI is the highest-density High category.** The determining factor is not reputation but capability: a tool that autonomously executes code, writes files, or controls a browser on behalf of the user has a fundamentally higher blast radius than one that only returns text. All High-rated Shadow AI entries control at least one of: terminal, browser, IDE.
+
+---
 
 ### known_ai_apps.json
 
