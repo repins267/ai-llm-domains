@@ -1,8 +1,10 @@
 name: CT Log Scanner
 
+# RETIRED 2026-08-28: CT discovery moved to the private ai-llm-domains-dev pipeline
+# (scan -> classify -> human review -> promote), which filters provider infrastructure
+# instead of blanket-stamping every subdomain. This workflow no longer runs on a schedule
+# and no longer auto-opens PRs; kept manual-only (workflow_dispatch) for reference.
 on:
-  schedule:
-    - cron: '0 6 * * 1'   # Every Monday at 06:00 UTC
   workflow_dispatch:
 
 permissions:
